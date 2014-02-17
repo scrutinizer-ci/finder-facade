@@ -43,7 +43,9 @@
 
 namespace SebastianBergmann\FinderFacade
 {
+    use Scrutinizer\Util\PathUtils;
     use Symfony\Component\Finder\Finder;
+    use Symfony\Component\Finder\SplFileInfo;
 
     /**
      * Convenience wrapper for Symfony's Finder component.
@@ -78,18 +80,21 @@ namespace SebastianBergmann\FinderFacade
          */
         protected $notNames = array();
 
+        private $filter;
+
         /**
          * @param array $items
          * @param array $excludes
          * @param array $names
          * @param array $notNames
          */
-        public function __construct(array $items = array(), array $excludes = array(), array $names = array(), array $notNames = array())
+        public function __construct(array $items = array(), array $excludes = array(), array $names = array(), array $notNames = array(), array $filter = array())
         {
             $this->items    = $items;
             $this->excludes = $excludes;
             $this->names    = $names;
             $this->notNames = $notNames;
+            $this->filter = $filter;
         }
 
         /**
@@ -122,6 +127,12 @@ namespace SebastianBergmann\FinderFacade
 
             foreach ($this->notNames as $notName) {
                 $finder->notName($notName);
+            }
+
+            if ( ! empty($this->filter)) {
+                $finder->filter(function(SplFileInfo $file) {
+                    return ! PathUtils::isFiltered($file->getRelativePathname(), $this->filter);
+                });
             }
 
             if ($iterate) {
